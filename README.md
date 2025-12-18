@@ -1,0 +1,1 @@
+# -Data-Engineering-Assignment-Stock-Data-Monthly-Resampling-and-Technical-Indicators
