@@ -1,277 +1,215 @@
-# -Data-Engineering-Assignment-Stock-Data-Monthly-Resampling-and-Technical-Indicators
-## 1. Overview
+# Stock Data Processor - Data Engineering Assignment
 
-The script processes two years of daily stock price data for 10 selected tickers. Key operations include:
+## Overview
 
-1. **Resampling** data from daily to monthly frequency.  
-2. Computing monthly **aggregates** (Open, High, Low, Close — OHLC).  
-3. Calculating **technical indicators** such as SMA(10), SMA(20), EMA(10), and EMA(20).  
-4. **Partitioning** the processed results into separate CSV files for each ticker.
+This project processes daily stock price data into monthly aggregates with technical indicators. It transforms a 2-year historical dataset containing daily stock prices for 10 unique symbols into monthly summaries with calculated technical indicators.
 
-***
+## Features
 
-## 2. Dataset Information
+- **Monthly Resampling**: Converts daily data to monthly frequency with proper OHLC aggregation
+- **Technical Indicators**: Calculates SMA 10, SMA 20, EMA 10, and EMA 20
+- **Data Partitioning**: Generates separate CSV files for each stock symbol
+- **Modular Architecture**: Clean separation of concerns with dedicated modules
 
-- **Source:** [GitHub Repository](https://github.com/sandeep-tt/tt-intern-dataset)  
-- **File:** `output_file.csv`  
-- **Tickers:** AAPL, AMD, AMZN, AVGO, CSCO, MSFT, NFLX, PEP, TMUS, TSLA  
-- **Date Range:** 2018-01-02 to 2019-12-31  
-- **Total Records:** 5,030 daily entries  
+## Project Structure
 
-***
+```
+stock_data_processor/
+├── __init__.py                 # Package initialization
+├── data_loader.py              # Data loading and validation
+├── monthly_aggregator.py       # Monthly OHLC aggregation logic
+├── technical_indicators.py     # SMA and EMA calculations
+└── file_writer.py             # File partitioning and writing
 
-## 3. Requirements
-
-**Prerequisites:**
-- Python 3.7 or higher  
-- pandas library  
-
-**Installation:**
-```bash
-pip install pandas
+process_stock_data.py          # Main execution script
+README_STOCK_PROCESSOR.md      # This file
 ```
 
-***
+## Requirements
 
-## 4. Execution Steps
+- Python 3.8+
+- pandas >= 1.3.0
+- numpy >= 1.20.0
 
-1. **Clone** the dataset repository:
-   ```bash
-   git clone https://github.com/sandeep-tt/tt-intern-dataset.git
-   ```
+## Installation
 
-2. **Run** the processing script:
-   ```bash
-   python process_stock_data.py
-   ```
+```bash
+pip install pandas numpy
+```
 
-3. **Check outputs** in the `results/` directory. Each ticker will have an individual output file:
-   ```
-   result_AAPL.csv
-   result_AMD.csv
-   ...
-   result_TSLA.csv
-   ```
+## Usage
 
-***
+### Basic Usage
 
-## 5. Output Format
+```bash
+python process_stock_data.py <input_file.csv> [output_dir]
+```
 
-Each output file contains **24 rows** (one per month) and the following columns:
+**Example:**
+```bash
+python process_stock_data.py data/stock_data.csv output
+```
 
-| Column | Description |
-|--------|-------------|
-| `date` | End-of-month date (YYYY-MM-DD) |
-| `open` | Opening price on the first trading day of the month |
-| `high` | Highest price during the month |
-| `low` | Lowest price during the month |
-| `close` | Closing price on the last trading day of the month |
-| `adjclose` | Adjusted closing price for the month |
-| `volume` | Sum of trading volume during the month |
-| `SMA_10`, `SMA_20` | 10- and 20-period Simple Moving Averages of monthly close prices |
-| `EMA_10`, `EMA_20` | 10- and 20-period Exponential Moving Averages of monthly close prices |
+### Input File Format
 
-***
+The input CSV must contain the following columns:
+- `date`: Date in YYYY-MM-DD format
+- `volume`: Trading volume
+- `open`: Opening price
+- `high`: Highest price
+- `low`: Lowest price
+- `close`: Closing price
+- `adjclose`: Adjusted closing price
+- `ticker`: Stock ticker symbol (AAPL, AMD, AMZN, AVGO, CSCO, MSFT, NFLX, PEP, TMUS, TSLA)
 
-## 6. Monthly Aggregation Logic
+### Output
 
-- **Open:** Price on the first trading day of the month  
-- **Close:** Price on the last trading day of the month  
-- **High:** Maximum price in the month  
-- **Low:** Minimum price in the month  
-- **Volume:** Sum of all trading volumes during the month  
+The script generates 10 CSV files in the output directory (default: `output/`):
+- `result_AAPL.csv`
+- `result_AMD.csv`
+- `result_AMZN.csv`
+- `result_AVGO.csv`
+- `result_CSCO.csv`
+- `result_MSFT.csv`
+- `result_NFLX.csv`
+- `result_PEP.csv`
+- `result_TMUS.csv`
+- `result_TSLA.csv`
 
-***
+Each file contains exactly 24 rows (one for each month in the 2-year period) with the following columns:
+- `date`: Month end date
+- `open`: First trading day's open price of the month
+- `high`: Maximum high price during the month
+- `low`: Minimum low price during the month
+- `close`: Last trading day's close price of the month
+- `adjclose`: Last trading day's adjusted close price
+- `volume`: Sum of volumes during the month
+- `SMA_10`: 10-period Simple Moving Average
+- `SMA_20`: 20-period Simple Moving Average
+- `EMA_10`: 10-period Exponential Moving Average
+- `EMA_20`: 20-period Exponential Moving Average
 
-## 7. Technical Indicators
+## Monthly Aggregation Logic
+
+- **Open**: The price at the first trading day of the month
+- **Close**: The price at the last trading day of the month
+- **High**: The maximum price reached during the month
+- **Low**: The minimum price reached during the month
+- **Volume**: Sum of all trading volumes during the month
+
+## Technical Indicators
 
 ### Simple Moving Average (SMA)
 
-\[
-SMA_N = \frac{C_1 + C_2 + ... + C_N}{N}
-\]
+Formula: `SMA = Sum of closing prices (over N periods) / N`
 
-Where \(C_i\) represents the monthly closing prices for the past N periods.
+- **SMA_10**: 10-period simple moving average
+- **SMA_20**: 20-period simple moving average
 
 ### Exponential Moving Average (EMA)
 
-**Multiplier:**  
-\[
-\text{Multiplier} = \frac{2}{N + 1}
-\]
+Formula:
+- Multiplier = 2 / (N + 1)
+- EMA = (Current Price - Previous EMA) × Multiplier + Previous EMA
+- First EMA uses SMA as the initial value
 
-**Formula:**  
-\[
-EMA = (Current Price - Previous EMA) \times Multiplier + Previous EMA
-\]
+- **EMA_10**: 10-period exponential moving average
+- **EMA_20**: 20-period exponential moving average
 
-The first EMA value is initialized using the corresponding SMA.
+## Implementation Details
 
-***
+### Vectorization
 
-## 8. Practical Assumptions
+All calculations use vectorized pandas operations for optimal performance:
+- `rolling().mean()` for SMA calculations
+- `ewm(span=N, adjust=False)` for EMA calculations
+- `groupby().resample()` for monthly aggregation
 
-This section outlines the practical assumptions made during the implementation of this data processing pipeline.
+### Code Structure
 
-### 8.1 Data Quality Assumptions
+The solution is modular with clear separation of concerns:
 
-1. **Input Data Integrity**
-   - The input CSV file (`output_file.csv`) is assumed to be complete and accessible
-   - All required columns (`date`, `volume`, `open`, `high`, `low`, `close`, `adjclose`, `ticker`) are present
-   - Date values are in a parseable format (YYYY-MM-DD or similar ISO format)
-   - No null or missing values in critical columns (OHLC prices)
-   - All price values are positive numbers (no negative or zero prices)
+1. **Data Loading** (`data_loader.py`): Handles CSV reading, validation, and preprocessing
+2. **Monthly Aggregation** (`monthly_aggregator.py`): Implements OHLC resampling logic
+3. **Technical Indicators** (`technical_indicators.py`): Calculates SMA and EMA using vectorized operations
+4. **File Writing** (`file_writer.py`): Partitions data and writes to separate CSV files
 
-2. **Data Completeness**
-   - Each ticker has sufficient data points to generate 24 monthly records (2 years)
-   - Missing trading days within a month are acceptable (markets are closed on weekends/holidays)
-   - If a month has no trading days, that month is excluded from the output (no forward/backward filling)
+## Assumptions
 
-3. **Ticker Consistency**
-   - All 10 expected tickers (AAPL, AMD, AMZN, AVGO, CSCO, MSFT, NFLX, PEP, TMUS, TSLA) are present in the dataset
-   - Ticker symbols are case-sensitive and match exactly as specified
-   - No duplicate ticker-date combinations exist
+1. **Data Completeness**: The dataset contains complete daily data for all 10 tickers across the 2-year period. Missing trading days are handled by pandas resampling.
 
-### 8.2 Business Logic Assumptions
+2. **Date Range**: The dataset covers exactly 24 months (2 years). The script will process all available months, but expects 24 months per ticker.
 
-4. **Trading Day Logic**
-   - "First trading day" refers to the earliest date with trading data in each calendar month
-   - "Last trading day" refers to the latest date with trading data in each calendar month
-   - Market holidays and weekends are naturally excluded (no trading data exists for these days)
-   - Open and Close prices are snapshots at specific points in time, not averages
+3. **Trading Days**: The script assumes standard trading days (Monday-Friday, excluding holidays). Non-trading days are automatically handled during monthly resampling.
 
-5. **Monthly Aggregation**
-   - Monthly resampling uses end-of-month (`'ME'`) frequency
-   - Each month is treated independently (no cross-month calculations for OHLC)
-   - Volume is summed across all trading days in the month
-   - High/Low are true maximums/minimums across all trading days in the month
+4. **Data Quality**: The input CSV is assumed to be clean with no duplicate dates per ticker. If duplicates exist, the last occurrence is used.
 
-6. **Time Period Assumptions**
-   - The dataset covers exactly 24 months (January 2018 to December 2019)
-   - Each ticker should produce exactly 24 monthly records
-   - Date range is continuous (no large gaps in the dataset)
+5. **Monthly Boundaries**: Monthly resampling uses calendar month boundaries. The "first trading day" refers to the first available trading day within each calendar month.
 
-### 8.3 Technical Indicator Assumptions
+6. **EMA Initialization**: For the first EMA value, we use the first available closing price (effectively SMA with window=1). This ensures EMA values are available from the start.
 
-7. **SMA Calculation**
-   - SMA is calculated using monthly closing prices only
-   - For periods with fewer than N months of data, partial calculations are allowed (`min_periods=1`)
-   - First SMA value equals the first closing price (SMA of 1 period = that price)
-   - SMA window sizes are 10 and 20 periods (months)
+7. **Output Directory**: The output directory is created automatically if it doesn't exist.
 
-8. **EMA Calculation**
-   - EMA uses the same monthly closing prices as SMA
-   - Multiplier formula: `2 / (Number of Periods + 1)`
-   - For the first EMA value, SMA is used as the initial "Previous Day's EMA"
-   - Since SMA(1) = first price, the first EMA effectively equals the first closing price
-   - EMA window sizes are 10 and 20 periods (months)
-   - All EMA calculations use the recursive formula: `EMA = (Price - Prev_EMA) × Multiplier + Prev_EMA`
+## Dataset
 
-9. **Indicator Window Handling**
-   - For months 1-9: SMA_10 and EMA_10 use available data (partial windows)
-   - For months 1-19: SMA_20 and EMA_20 use available data (partial windows)
-   - Full window calculations begin at month 10 (SMA_10, EMA_10) and month 20 (SMA_20, EMA_20)
+The dataset can be downloaded from:
+https://github.com/sandeep-tt/tt-intern-dataset
 
-### 8.4 Technical Implementation Assumptions
+After downloading, place the CSV file in your project directory or provide the path when running the script.
 
-10. **File System**
-    - The script assumes read access to `tt-intern-dataset/output_file.csv`
-    - Write access is available for creating the `results/` directory
-    - File paths use forward slashes (works on Windows, Linux, macOS)
-    - CSV files use UTF-8 encoding (default Pandas behavior)
+## Example Output
 
-11. **Data Types**
-    - Date column is parsed as datetime objects
-    - Price columns (open, high, low, close, adjclose) are float64
-    - Volume is integer or float64 (depending on data)
-    - Ticker is string/object type
+```
+============================================================
+Stock Data Processor - Monthly Aggregation & Technical Indicators
+============================================================
 
-12. **Precision and Rounding**
-    - All numeric values preserve original precision from input data
-    - No explicit rounding is applied (maintains data accuracy)
-    - Output CSV files may show many decimal places based on input precision
+[Step 1] Loading data from: stock_data.csv
+✓ Loaded 5040 daily records
 
-### 8.5 Output Format Assumptions
+[Step 2] Validating tickers...
+✓ All 10 expected tickers found
 
-13. **File Naming**
-    - Output files follow the convention: `result_{TICKER}.csv` (e.g., `result_AAPL.csv`)
-    - Ticker symbols are uppercase in filenames
-    - Files are saved in the `results/` directory (created if it doesn't exist)
+[Step 3] Resampling to monthly frequency...
+✓ Created 240 monthly records
 
-14. **Output Structure**
-    - Each output file contains exactly 24 data rows (one per month) plus header row
-    - Rows are sorted chronologically by date (ascending order)
-    - Column order: `date`, `open`, `high`, `low`, `close`, `adjclose`, `volume`, `SMA_10`, `SMA_20`, `EMA_10`, `EMA_20`
-    - Date format in output: `YYYY-MM-DD` (ISO 8601)
+[Step 4] Calculating technical indicators...
+✓ Added SMA 10, SMA 20, EMA 10, and EMA 20 indicators
 
-15. **Missing Data Handling**
-    - If a month has no trading data, that month is excluded (no row created)
-    - If technical indicators cannot be calculated (edge cases), NaN values may appear
-    - No interpolation or forward-filling of missing values
+[Step 5] Partitioning and writing results to output/...
+Created output/result_AAPL.csv with 24 rows
+Created output/result_AMD.csv with 24 rows
+...
+✓ Successfully created 10 output files
 
-### 8.6 Environment Assumptions
+============================================================
+Processing Summary
+============================================================
+  result_AAPL.csv: 24 rows
+  result_AMD.csv: 24 rows
+  ...
+============================================================
 
-16. **Python Environment**
-    - Python 3.7 or higher is available
-    - Pandas library is installed and accessible
-    - Standard library modules (`os`, `typing`) are available
-    - No third-party technical analysis libraries are required or used
+✓ Processing complete!
+```
 
-17. **Performance**
-    - Dataset size is manageable in memory (5,030 rows)
-    - Processing time is acceptable for interactive use (seconds, not minutes)
-    - No distributed processing or database connections required
+## Testing
 
-### 8.7 Edge Cases and Limitations
+To verify the output:
+1. Check that 10 files are created
+2. Verify each file has exactly 24 rows
+3. Validate that SMA_10 and SMA_20 are calculated correctly (compare with manual calculation)
+4. Validate that EMA_10 and EMA_20 follow the exponential smoothing formula
 
-18. **Known Limitations**
-    - Script does not handle stock splits or corporate actions automatically (relies on `adjclose` column)
-    - No validation of price relationships (e.g., High >= Low, High >= Open, High >= Close)
-    - No handling of data quality issues (negative volumes, impossible price movements)
-    - Assumes consistent data structure across all tickers
+## Notes
 
-19. **Error Handling**
-    - Script will fail gracefully if input file is missing or malformed
-    - No retry logic for file I/O operations
-    - No validation of output file creation success beyond basic error handling
+- The script uses pandas' built-in functions for all calculations, avoiding third-party technical analysis libraries as required.
+- All operations are vectorized for optimal performance.
+- The code is designed to be readable and maintainable with clear function names and documentation.
 
-***
+## License
 
-## 9. Code Structure
-
-| Function | Description |
-|-----------|-------------|
-| `load_data()` | Loads and parses the input dataset |
-| `resample_to_monthly()` | Resamples daily data into monthly OHLC format |
-| `calculate_sma()` | Computes Simple Moving Average |
-| `calculate_ema()` | Computes Exponential Moving Average |
-| `calculate_technical_indicators()` | Applies SMA and EMA across tickers |
-| `partition_and_save()` | Saves processed data for each ticker |
-| `main()` | Oversees the complete workflow |
-
-***
-
-## 10. Verification Checklist
-
-- 10 output CSV files generated (one per ticker).  
-- Each file contains 24 rows plus a header row.  
-- All required columns are present and ordered chronologically.  
-- SMA/EMA calculations verified: first value equals the closing price.
-
-***
-
-## 11. References
-
-- [Exponential Moving Average (Investopedia)](https://www.investopedia.com/terms/e/ema.asp)  
-- [EMA Explanation – Groww](https://groww.in/p/exponential-moving-average)  
-- [Pandas Resampling Documentation](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.resample.html)  
-- [Pandas Rolling Windows](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.rolling.html)  
-- [Pandas Exponential Weighted Functions](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.ewm.html)
+This project is created for educational purposes as part of a data engineering assignment.
 
 
-***
-
-## 12. Author
-
-**Atharva Shinde 
 Sbjitatharvas@gmail.com**  
